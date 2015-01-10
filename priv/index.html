@@ -1,0 +1,135 @@
+<!-- file: priv/templates/index.html -->
+<html>
+<head>
+    <title>Todo List</title>
+   <style>
+      .center { text-align: center; }
+   </style>
+   <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+   <script src="http://underscorejs.org/underscore-min.js"></script>
+   <script>
+      $(function(){
+
+         // Initialize variables
+         var todoList = {};
+         var $todoList = $("#todo-list");
+         var $todoTpl = $("#todos-tpl");
+         var $todoForm = $("#todo-form");
+         var $todoId = $("#todo-id");
+         var $todoContent = $("#todo-content");
+         var $todoPriority = $("#todo-priority");
+         var $todoStatus = $("#todo-status");
+         var todoRender = _.template($todoTpl.html());
+
+         // List todos
+         $todoList.on('fetch reset', function(){
+            $.get("/todos")
+               .done(function(data){
+                  todoList = data;
+                  $todoList.html(todoRender({todos: data}));
+               });
+         });
+
+         // Clear form
+         $todoForm.on('clear', function(){
+            $todoId.val('');
+            $todoContent.val('');
+            todoList = {};
+         });
+
+         // Create or Update
+         $todoForm.on('submit', function(event){
+            event.preventDefault();
+            var data = $todoForm.serializeArray();
+
+            if($todoId.val() == ''){ 
+               $.post("/todo", data);
+            }else{
+               console.log(data);
+               $.ajax({
+                  url: "/todo/" + data[0].value,
+                  type: 'put',
+                  data: data
+               });
+            }
+
+            $todoList.trigger('reset');
+            $todoForm.trigger('clear');
+         });
+
+         // Delete
+         $todoList.on('click', '.delete-todo', function(){
+            var id = $(this).parents("li").attr("todo-id");
+            $.ajax({
+               url: '/todo/'+id,
+               type: 'delete'
+            }).done(function(data){
+               console.log(data);
+               $todoList.trigger('reset');
+               $todoForm.trigger('clear');
+            });
+         });
+
+         // Populate form with an existing todo for edit
+         $todoList.on('click', '.edit-todo', function(){
+            var id = $(this).parents("li").attr("todo-id");
+            $todoId.val(id);
+            $todoContent.val(todoList[id][0]);
+            $todoPriority.val(todoList[id][1]);
+            $todoStatus.val(todoList[id][2]);
+         });
+
+         // Start!
+         $todoList.trigger('fetch');
+
+      });
+   </script>
+   <script type="javascript/ejs" id="todos-tpl">
+      <ul>
+         <% _.each(todos, function(value, key){ %>
+            <li todo-id="<%= key %>">
+               <div><%= value[0] %></div>
+               Priority: <%= value[1] %>
+               Status: <%= value[2] %>
+               <div>
+                  <button class="delete-todo">Delete</button> 
+                  <button class="edit-todo">Edit</button>
+               </div>
+            </li>
+         <% }); %>
+      </ul>
+   </script>
+</head>
+<body>
+   <div class="">
+      <p>Welcome to Leptus Todo List</p>
+      <form id="todo-form">
+         <input type="hidden" name="id" id="todo-id"/>
+         <label>Content</label>
+         <div>
+            <textarea id="todo-content" name="content"></textarea>
+         </div>        
+         <label>Priority</label>
+         <div>
+            <select id="todo-priority" name="priority">
+               <option value="Low">Low</option>
+               <option value="Medium">Medium</option>
+               <option value="High">High</option>
+            </select>
+         </div>        
+         <label>Status</label>
+         <div>
+            <select id="todo-status" name="status">
+               <option value="Undone">Undone</option>
+               <option value="Done">Done</option>
+            </select>
+         </div>
+         <br/>
+         <div><button type="submit">Save</button></div>
+      </form>
+   </div>
+   <div id="todo-list">
+
+   </div>
+</body>
+</html>
