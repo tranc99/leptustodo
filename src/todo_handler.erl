@@ -80,4 +80,29 @@ put("/todo/:id", Req, State) ->
     Id = leptus_req:param(Req, id),
     Post = leptus_req:body_qs(Req),
     {<<"content">>, Content} = lists:keyfind(<<"content">>, 1, Post),
-    {<<"priority">>, Priority} = lists:key
+    {<<"priority">>, Priority} = lists:keyfind(<<"priority">>, 1, Post),
+    {<<"status">>, Status} = lists:keyfind(<<"status">>, 1, Post),
+    Write = fun() ->
+                Todo = #todo{
+                             id = Id,
+                             content = Content,
+                             priority = Priority,
+                             status = Status
+                            },
+                mnesia:write(Todo)
+    end,
+    mnesia:transaction(Write),
+    {200, {json, Post}, State}.
+
+%% delete
+delete("/todo/:id", Req, State) ->
+    id = leptus_req:param(Req, id),
+    Delete = fun() ->
+                 mnesia:delete({todo, Id})
+    end,
+    mnesia:transaction(Delete),
+    {200, {json, [{<<"status">>, <<"deleted">>}]}, State}.
+
+%% End
+terminate(_Reason, _Route, _Req, _State) ->
+    ok.
