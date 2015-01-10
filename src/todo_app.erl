@@ -19,7 +19,7 @@ start(_StartType, _StartArgs) ->
                               ]),
 
     %% define static directory for application
-    Opts = [{static_dir, {'_', {priv_dir, ?MODULE, "templates"}}}],
+    Opts = [{port, 3000},{static_dir, {'_', {priv_dir, ?MODULE, "templates"}}}],
 
     %% start leptus listener
     leptus:start_listener(http, [{'_', [{todo_handler, undef}]}], Opts).

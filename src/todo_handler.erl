@@ -96,7 +96,7 @@ put("/todo/:id", Req, State) ->
 
 %% delete
 delete("/todo/:id", Req, State) ->
-    id = leptus_req:param(Req, id),
+    Id = leptus_req:param(Req, id),
     Delete = fun() ->
                  mnesia:delete({todo, Id})
     end,
